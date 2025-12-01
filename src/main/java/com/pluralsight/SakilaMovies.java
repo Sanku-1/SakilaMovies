@@ -32,7 +32,7 @@ public class SakilaMovies {
         while (true) {
         System.out.println("What do you want to do?");
         System.out.println("1) Search for Actors by last name");
-        System.out.println("2) Display all customers");
+        System.out.println("2) Search for Movies by Actor");
         System.out.println("3) Display all categories");
         System.out.println("0) Exit");
         System.out.print("Select an option: ");
@@ -45,7 +45,7 @@ public class SakilaMovies {
                 displayActors(dataSource, scanner);
                 break;
             case 2:
-                displayAllCustomers(dataSource);
+                actorMovieMatch(dataSource, scanner);
                 break;
             case 3:
                 displayAllCategories(dataSource);
@@ -123,7 +123,6 @@ private static void displayActors(BasicDataSource dataSource, Scanner scanner) {
         // Use try-with-resources for automatic resource management
         try (Connection connection = dataSource.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-
                 statement.setString(1, userSearch);
                 ResultSet results = statement.executeQuery();
                 while (results.next()) {
@@ -144,34 +143,40 @@ private static void displayActors(BasicDataSource dataSource, Scanner scanner) {
 }
 
 
-private static void displayAllCustomers(BasicDataSource dataSource) {
-    String query = "SELECT ContactName, CompanyName, City, Country, Phone FROM Customers ORDER BY Country";
+    private static void actorMovieMatch(BasicDataSource dataSource, Scanner scanner) {
+        System.out.println("Please enter the first name of the actor you wish to search for:");
+        String userSearchFirst = scanner.nextLine();
+        System.out.println("Please enter the last name of the actor you wish to search for:");
+        String userSearchLast = scanner.nextLine();
 
-    try {
-        Class.forName("com.mysql.cj.jdbc.Driver");
+        String query =  "SELECT film.title, actor.first_name, actor.last_name " +
+                        "FROM film_actor " +
+                        "LEFT JOIN film " +
+                            "ON (film_actor.film_id = film.film_id) " +
+                        "LEFT JOIN actor " +
+                            "ON (film_actor.actor_id = actor.actor_id) " +
+                        "WHERE ((actor.first_name LIKE ?) and (actor.last_name LIKE ?))";
 
-        // Use try-with-resources for automatic resource management
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet results = statement.executeQuery()) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            while (results.next()) {
-                String contactName = results.getString("ContactName");
-                String companyName = results.getString("CompanyName");
-                String city = results.getString("City");
-                String country = results.getString("Country");
-                String phone = results.getString("Phone");
-
-                System.out.println("Contact Name: " + contactName);
-                System.out.println("Company Name: " + companyName);
-                System.out.println("City: " + city);
-                System.out.println("Country: " + country);
-                System.out.println("Phone: " + phone);
-                System.out.println("-----------------------------------------");
+            // Use try-with-resources for automatic resource management
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setString(1, userSearchFirst);
+                    statement.setString(2, userSearchLast);
+                    ResultSet results = statement.executeQuery();
+                    System.out.println("Matching Movies:");
+                    System.out.println("-----------------------------------------");
+                    while (results.next()) {
+                        String movie_title = results.getString("film.title");
+                        System.out.println(movie_title);
+                        System.out.println("-----------------------------------------");
+                    }
+                }
             }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
         }
-    } catch (ClassNotFoundException | SQLException e) {
-        e.printStackTrace();
     }
-}
 }
