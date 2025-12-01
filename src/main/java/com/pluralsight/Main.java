@@ -38,10 +38,10 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    displayAllProducts(username, password);
+                    displayAllProducts(dataSource);
                     break;
                 case 2:
-                    displayAllCustomers(username, password);
+                    displayAllCustomers(dataSource);
                     break;
                 case 3:
                     displayAllCategories(dataSource);
@@ -107,14 +107,14 @@ public class Main {
         }
     }
 
-    private static void displayAllProducts(String username, String password) {
+    private static void displayAllProducts(BasicDataSource dataSource) {
         String query = "SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM products";
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Use try-with-resources for automatic resource management
-            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+            try (Connection connection = dataSource.getConnection();
                  PreparedStatement statement = connection.prepareStatement(query);
                  ResultSet results = statement.executeQuery()) {
 
@@ -137,14 +137,14 @@ public class Main {
     }
 
 
-    private static void displayAllCustomers(String username, String password) {
+    private static void displayAllCustomers(BasicDataSource dataSource) {
         String query = "SELECT ContactName, CompanyName, City, Country, Phone FROM Customers ORDER BY Country";
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Use try-with-resources for automatic resource management
-            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+            try (Connection connection = dataSource.getConnection();
                  PreparedStatement statement = connection.prepareStatement(query);
                  ResultSet results = statement.executeQuery()) {
 
