@@ -31,17 +31,18 @@ public class SakilaMovies {
 
         while (true) {
         System.out.println("What do you want to do?");
-        System.out.println("1) Display all products");
+        System.out.println("1) Search for Actors by last name");
         System.out.println("2) Display all customers");
         System.out.println("3) Display all categories");
         System.out.println("0) Exit");
         System.out.print("Select an option: ");
 
         int choice = scanner.nextInt();
+        scanner.nextLine();
 
         switch (choice) {
             case 1:
-                displayAllProducts(dataSource);
+                displayActors(dataSource, scanner);
                 break;
             case 2:
                 displayAllCustomers(dataSource);
@@ -110,28 +111,31 @@ private static void displayProductsInCategory(Connection connection, int categor
     }
 }
 
-private static void displayAllProducts(BasicDataSource dataSource) {
-    String query = "SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM products";
+private static void displayActors(BasicDataSource dataSource, Scanner scanner) {
+    System.out.println("Please enter the last name of the actor you wish to search for:");
+    String userSearch = scanner.nextLine();
+
+    String query = "SELECT first_name, last_name FROM actor WHERE (actor.last_name LIKE ?)";
 
     try {
         Class.forName("com.mysql.cj.jdbc.Driver");
 
         // Use try-with-resources for automatic resource management
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet results = statement.executeQuery()) {
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
 
-            while (results.next()) {
-                int productId = results.getInt("ProductID");
-                String productName = results.getString("ProductName");
-                double unitPrice = results.getDouble("UnitPrice");
-                int unitsInStock = results.getInt("UnitsInStock");
+                statement.setString(1, userSearch);
+                ResultSet results = statement.executeQuery();
+                while (results.next()) {
 
-                System.out.println("Product ID: " + productId);
-                System.out.println("Product Name: " + productName);
-                System.out.println("Unit Price: " + unitPrice);
-                System.out.println("Units In Stock: " + unitsInStock);
-                System.out.println("-----------------------------------------");
+                    String first_name = results.getString("first_name");
+                    String last_name = results.getString("last_name");
+
+
+                    System.out.println("First Name: " + first_name);
+                    System.out.println("Last Name: " + last_name);
+                    System.out.println("-----------------------------------------");
+                }
             }
         }
     } catch (ClassNotFoundException | SQLException e) {
