@@ -33,7 +33,6 @@ public class SakilaMovies {
         System.out.println("What do you want to do?");
         System.out.println("1) Search for Actors by last name");
         System.out.println("2) Search for Movies by Actor");
-        System.out.println("3) Display all categories");
         System.out.println("0) Exit");
         System.out.print("Select an option: ");
 
@@ -47,9 +46,6 @@ public class SakilaMovies {
             case 2:
                 actorMovieMatch(dataSource, scanner);
                 break;
-            case 3:
-                displayAllCategories(dataSource);
-                break;
             case 0:
                 System.out.println("Exiting...");
                 return;
@@ -57,57 +53,6 @@ public class SakilaMovies {
                 System.out.println("Invalid option. Please try again.");
                 break;
         }
-    }
-}
-
-private static void displayAllCategories(BasicDataSource dataSource) {
-    try {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                     "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID");
-             ResultSet resultSet = statement.executeQuery()) {
-
-            System.out.println("Categories:");
-            while (resultSet.next()) {
-                int categoryId = resultSet.getInt("CategoryID");
-                String categoryName = resultSet.getString("CategoryName");
-                System.out.println(categoryId + ": " + categoryName);
-            }
-
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter the category ID: ");
-            int categoryId = scanner.nextInt();
-
-            displayProductsInCategory(connection, categoryId);
-
-        }
-    } catch (ClassNotFoundException | SQLException e) {
-        e.printStackTrace();
-    }
-}
-
-private static void displayProductsInCategory(Connection connection, int categoryId) {
-    String query = "SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM Products WHERE CategoryID = ?";
-    try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-        preparedStatement.setInt(1, categoryId);
-        try (ResultSet productResultSet = preparedStatement.executeQuery()) {
-            System.out.println("\nProducts in the selected category:");
-            while (productResultSet.next()) {
-                int productId = productResultSet.getInt("ProductID");
-                String productName = productResultSet.getString("ProductName");
-                double unitPrice = productResultSet.getDouble("UnitPrice");
-                int unitsInStock = productResultSet.getInt("UnitsInStock");
-
-                System.out.println("Product ID: " + productId);
-                System.out.println("Product Name: " + productName);
-                System.out.println("Unit Price: " + unitPrice);
-                System.out.println("Units In Stock: " + unitsInStock);
-                System.out.println("-----------------------------------------");
-            }
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
     }
 }
 
@@ -125,15 +70,24 @@ private static void displayActors(BasicDataSource dataSource, Scanner scanner) {
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setString(1, userSearch);
                 ResultSet results = statement.executeQuery();
-                while (results.next()) {
 
-                    String first_name = results.getString("first_name");
-                    String last_name = results.getString("last_name");
+                if (results.next()) {
+                    System.out.println("Your matches are: \n");
+                    // if there are, you are already sitting on the first one so
+                    // switch your loop to using a do/while
+                    do {
+                    // process results
+                        String first_name = results.getString("first_name");
+                        String last_name = results.getString("last_name");
 
 
-                    System.out.println("First Name: " + first_name);
-                    System.out.println("Last Name: " + last_name);
-                    System.out.println("-----------------------------------------");
+                        System.out.println("First Name: " + first_name);
+                        System.out.println("Last Name: " + last_name);
+                        System.out.println("-----------------------------------------");
+                    } while (results.next());
+                }
+                else {
+                    System.out.println("No matches!");
                 }
             }
         }
@@ -166,12 +120,19 @@ private static void displayActors(BasicDataSource dataSource, Scanner scanner) {
                     statement.setString(1, userSearchFirst);
                     statement.setString(2, userSearchLast);
                     ResultSet results = statement.executeQuery();
-                    System.out.println("Matching Movies:");
-                    System.out.println("-----------------------------------------");
-                    while (results.next()) {
-                        String movie_title = results.getString("film.title");
-                        System.out.println(movie_title);
-                        System.out.println("-----------------------------------------");
+                    if (results.next()) {
+                        System.out.println("Your matches are: \n");
+                        // if there are, you are already sitting on the first one so
+                        // switch your loop to using a do/while
+                        do {
+                        // process results
+                            String movie_title = results.getString("film.title");
+                            System.out.println(movie_title);
+                            System.out.println("-----------------------------------------");
+                        } while (results.next());
+                    }
+                    else {
+                        System.out.println("No matches!");
                     }
                 }
             }
